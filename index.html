@@ -199,12 +199,12 @@
         }
         
         function nextStep() {
-            // Skip the final rest period of the last round
-            if (currentRound === totalRounds && currentStepIndex === 3) {
+            // Complete workout after final Right exercise
+            if (currentRound === totalRounds && currentStepIndex === 2) {
                 completeWorkout();
                 return;
             }
-            
+
             currentStepIndex++;
             
             // Move to next round if we've completed all steps
