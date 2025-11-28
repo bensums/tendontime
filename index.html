@@ -142,13 +142,21 @@
     </div>
 
     <script>
-        const sequence = [
+        // Test mode: add ?test to URL for 3s work, 1s/2s rest
+        const isTestMode = new URLSearchParams(window.location.search).has('test');
+
+        const sequence = isTestMode ? [
+            { name: 'Left', duration: 3, class: 'left' },
+            { name: 'Rest', duration: 1, class: 'rest' },
+            { name: 'Right', duration: 3, class: 'right' },
+            { name: 'Rest', duration: 2, class: 'rest' }
+        ] : [
             { name: 'Left', duration: 30, class: 'left' },
             { name: 'Rest', duration: 10, class: 'rest' },
             { name: 'Right', duration: 30, class: 'right' },
             { name: 'Rest', duration: 80, class: 'rest' }
         ];
-        
+
         const totalRounds = 5;
         let currentRound = 1;
         let currentStepIndex = 0;
