@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .exercise-label {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 30px;
+            min-height: 1.2em;
+        }
+        
+        .exercise-label.left {
+            color: #4a9eff;
+        }
+        
+        .exercise-label.right {
+            color: #ff6b6b;
+        }
+        
+        .exercise-label.rest {
+            color: #51cf66;
+        }
+        
+        .timer-display {
+            font-size: 8em;
+            font-weight: bold;
+            margin: 40px 0;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .round-info {
+            font-size: 1.5em;
+            color: #888;
+            margin-bottom: 40px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+        
+        button {
+            font-size: 1.2em;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .start-btn {
+            background: #51cf66;
+            color: #000;
+        }
+        
+        .pause-btn {
+            background: #ffd43b;
+            color: #000;
+        }
+        
+        .reset-btn {
+            background: #ff6b6b;
+            color: #fff;
+        }
+        
+        .completed {
+            font-size: 2em;
+            color: #51cf66;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 480px) {
+            .exercise-label {
+                font-size: 2em;
+            }
+            
+            .timer-display {
+                font-size: 5em;
+            }
+            
+            .round-info {
+                font-size: 1.2em;
+            }
+            
+            button {
+                font-size: 1em;
+                padding: 12px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="exercise-label" id="exerciseLabel">Ready</div>
+        <div class="timer-display" id="timerDisplay">00:00</div>
+        <div class="round-info" id="roundInfo">Round 1 of 5</div>
+        <div class="controls">
+            <button class="start-btn" id="startBtn">Start</button>
+            <button class="pause-btn" id="pauseBtn" disabled>Pause</button>
+            <button class="reset-btn" id="resetBtn">Reset</button>
+        </div>
+        <div class="completed" id="completedMsg"></div>
+    </div>
+
+    <script>
+        const sequence = [
+            { name: 'Left', duration: 30, class: 'left' },
+            { name: 'Rest', duration: 10, class: 'rest' },
+            { name: 'Right', duration: 30, class: 'right' },
+            { name: 'Rest', duration: 80, class: 'rest' }
+        ];
+        
+        const totalRounds = 5;
+        let currentRound = 1;
+        let currentStepIndex = 0;
+        let timeRemaining = 0;
+        let intervalId = null;
+        let isPaused = false;
+        let isRunning = false;
+        
+        const exerciseLabel = document.getElementById('exerciseLabel');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const roundInfo = document.getElementById('roundInfo');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const completedMsg = document.getElementById('completedMsg');
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function updateDisplay() {
+            const currentStep = sequence[currentStepIndex];
+            exerciseLabel.textContent = currentStep.name;
+            exerciseLabel.className = `exercise-label ${currentStep.class}`;
+            timerDisplay.textContent = formatTime(timeRemaining);
+            roundInfo.textContent = `Round ${currentRound} of ${totalRounds}`;
+        }
+        
+        function playBeep() {
+            // Create a simple beep sound
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+        
+        function nextStep() {
+            // Skip the final rest period of the last round
+            if (currentRound === totalRounds && currentStepIndex === 3) {
+                completeWorkout();
+                return;
+            }
+            
+            currentStepIndex++;
+            
+            // Move to next round if we've completed all steps
+            if (currentStepIndex >= sequence.length) {
+                currentStepIndex = 0;
+                currentRound++;
+                
+                if (currentRound > totalRounds) {
+                    completeWorkout();
+                    return;
+                }
+            }
+            
+            timeRemaining = sequence[currentStepIndex].duration;
+            updateDisplay();
+            playBeep();
+        }
+        
+        function completeWorkout() {
+            stopTimer();
+            exerciseLabel.textContent = 'Complete!';
+            exerciseLabel.className = 'exercise-label rest';
+            timerDisplay.textContent = '00:00';
+            completedMsg.textContent = '🎉 Workout Complete!';
+            startBtn.disabled = true;
+        }
+        
+        function tick() {
+            if (timeRemaining > 0) {
+                timeRemaining--;
+                timerDisplay.textContent = formatTime(timeRemaining);
+                
+                // Beep on last 3 seconds
+                if (timeRemaining <= 3 && timeRemaining > 0) {
+                    playBeep();
+                }
+            } else {
+                nextStep();
+            }
+        }
+        
+        function startTimer() {
+            if (!isRunning) {
+                // Initialize first step
+                currentStepIndex = 0;
+                currentRound = 1;
+                timeRemaining = sequence[0].duration;
+                updateDisplay();
+            }
+            
+            isRunning = true;
+            isPaused = false;
+            intervalId = setInterval(tick, 1000);
+            
+            startBtn.textContent = 'Resume';
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+        }
+        
+        function pauseTimer() {
+            isPaused = true;
+            clearInterval(intervalId);
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+        }
+        
+        function stopTimer() {
+            isRunning = false;
+            isPaused = false;
+            clearInterval(intervalId);
+        }
+        
+        function resetTimer() {
+            stopTimer();
+            currentRound = 1;
+            currentStepIndex = 0;
+            timeRemaining = 0;
+            
+            exerciseLabel.textContent = 'Ready';
+            exerciseLabel.className = 'exercise-label';
+            timerDisplay.textContent = '00:00';
+            roundInfo.textContent = 'Round 1 of 5';
+            completedMsg.textContent = '';
+            
+            startBtn.textContent = 'Start';
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+        }
+        
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+        
+        // Initialize display
+        resetTimer();
+    </script>
+</body>
+</html>
