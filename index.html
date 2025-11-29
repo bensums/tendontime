@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workout Timer</title>
+    <title>Tendon Rehab Timer - Keith Baar Protocol</title>
+    <meta name="description" content="Interval timer for tendon rehabilitation exercises based on Keith Baar's research. 5 rounds of alternating left/right exercises with optimized rest periods for tendon healing.">
     <style>
         * {
             margin: 0;
@@ -107,7 +108,37 @@
             color: #51cf66;
             margin-top: 20px;
         }
-        
+
+        .footer {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid #333;
+            font-size: 0.9em;
+            color: #888;
+            line-height: 1.6;
+            max-width: 600px;
+        }
+
+        .footer h2 {
+            font-size: 1em;
+            color: #aaa;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .footer p {
+            margin-bottom: 12px;
+        }
+
+        .footer a {
+            color: #4a9eff;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
         @media (max-width: 480px) {
             .exercise-label {
                 font-size: 2em;
@@ -139,6 +170,12 @@
             <button class="reset-btn" id="resetBtn">Reset</button>
         </div>
         <div class="completed" id="completedMsg"></div>
+
+        <footer class="footer">
+            <h2>About This Timer</h2>
+            <p>This interval timer implements the tendon rehabilitation protocol developed by <a href="https://health.ucdavis.edu/physiology/faculty/baar.html" target="_blank" rel="noopener">Keith Baar</a>, professor in the department of Physiology and Membrane Biology at UC Davis.</p>
+            <p>The protocol uses specific loading intervals (30s work, optimized rest periods) repeated 5 times to stimulate collagen synthesis and promote tendon healing. Based on research showing tendons respond optimally to intermittent mechanical loading with adequate recovery between sets.</p>
+        </footer>
     </div>
 
     <script>
