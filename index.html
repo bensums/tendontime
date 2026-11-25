@@ -284,6 +284,7 @@
             timerDisplay.textContent = '00:00';
             completedMsg.textContent = '🎉 Workout Complete!';
             startBtn.disabled = true;
+            gtag('event', 'workout_complete', { rounds: totalRounds, test_mode: isTestMode });
         }
         
         function tick() {
